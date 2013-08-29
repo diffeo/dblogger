@@ -13,11 +13,16 @@ Copyright 2013 Diffeo, Inc.
 # this into fields
 
 # 3) make tests for test-driven dev
+#
+# - Move this to different modules.
+#
 
-import sys
 import time
 import logging
-import traceback
+import json
+
+from time_uuid import TimeUUID
+
 
 class FixedWidthFormatter(logging.Formatter):
     '''
@@ -39,6 +44,7 @@ class FixedWidthFormatter(logging.Formatter):
         record.fixed_width_levelname = levelname + levelname_padding
         return super(FixedWidthFormatter, self).format(record)
 
+
 class DatabaseLogHandler(logging.Handler):
     '''
     This was adapted from reading log_test14.py in the original python
@@ -59,47 +65,67 @@ class DatabaseLogHandler(logging.Handler):
     '%(exc_text)s',
     '%(thread)s'
     '''
-    def __init__(self, storage_client):
+    def __init__(self, storage_client, namespace, table_name="log"):
         logging.Handler.__init__(self)
         self.storage = storage_client
+        self.namespace = namespace
+        self.table_name = table_name
+        storage_client.setup_namespace(namespace, { table_name : 1 })
 
     def formatDBTime(self, record):
-        record.dbtime = time.strftime('%Y-%m-%dT%H:%M:%S-%Z', time.localtime(record.created))
+        record.humantime = time.strftime('%Y-%m-%dT%H:%M:%S-%Z', time.localtime(record.created))
+
+    def serialize(self, record):
+        rec = {}
+        for k, v in record.__dict__.items():
+            if k in [ 'args', 'msg' ]:
+                continue
+            rec[str(k)] = str(v)
+
+        return json.dumps(rec)
 
     def emit(self, record):
         '''
         handle a record by formatting parts of it, and pushing it into
-        storage
+        storage.
         '''
-        ## use default formatting
         self.format(record)
-        ## now set the database time up
         self.formatDBTime(record)
+
         if record.exc_info:
             record.exc_text = logging._defaultFormatter.formatException(record.exc_info)
         else:
             record.exc_text = ''
 
-        ## pass the record as a dictionary to the storage client.log()
-        rec = {}
-        for k, v in record.__dict__.items():
-            rec[str(k)] = str(v)
-        try:
-            self.storage.log(rec)
-        except Exception, exc: #self.storage.StorageClosed:
-            ## gracelessly do nothing
-            pass
+        uuid = TimeUUID.with_timestamp(record.created)
+        dbrec = self.serialize(record)
+        self.storage.put(self.table_name, ((uuid,), dbrec))
 
-        ## if some part of those steps fail, we want the exception to
-        ## bubble all the way up, so we do not do this:
-        #except:
-        #    ei = sys.exc_info()
-        #    traceback.print_exception(ei[0], ei[1], ei[2], None, sys.stderr)
-        #    del ei
 
-    #def flush... is missing
+class DBLoggerQuery(object):
+    def __init__(self, storage_client, table_name="log"):
+        self.storage = storage_client
+        self.table_name = table_name
 
-    def close(self):
-        self.storage.close()
-        ## flush first?
-        logging.Handler.close(self)
+
+    def filter(self, time_start=None, time_end=None, filter_str={}):
+        """Get log record from the database.
+        
+        time_start and time_end must be timestamp as returned by time.time().
+
+        filter_str() -- An dict of filters that will match agaist log record
+        fields. Not Implemented yet.
+
+        """
+
+        key_start = ''
+        key_end = ''
+        if time_start:
+            uuid_start = TimeUUID.with_timestamp(time_start)
+            key_start = (uuid_start,)
+        if time_end:
+            uuid_end = TimeUUID.with_timestamp(time_end)
+            key_end = (uuid_end,)
+
+        return self.storage.get(self.table_name, (key_start, key_end))
+
