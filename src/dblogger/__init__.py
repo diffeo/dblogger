@@ -127,5 +127,6 @@ class DBLoggerQuery(object):
             uuid_end = TimeUUID.with_timestamp(time_end)
             key_end = (uuid_end,)
 
-        return self.storage.get(self.table_name, (key_start, key_end))
+        for key, value in self.storage.get(self.table_name, (key_start, key_end)):
+            yield key, json.loads(value)
 

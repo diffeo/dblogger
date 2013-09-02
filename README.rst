@@ -14,17 +14,36 @@ Format
 
 Logs are stored in kvlayer using the following format:
 
-.... Diego, please expand this
+:key: UUID generated from the created field of the LogRecord class.
+:value: JSON object with the LogRecord attributes except args and msg.
 
-
+For more information have a look at Python LogRecord documentation.
+http://docs.python.org/2/library/logging.html#logrecord-attributes
 
 
 Usage
 =====
+
 Python
 ------
 
-.... Diego, please write out example code snippets for using this in a python app
+This is a small app in Python, an example of how to use dblogger.
+
+    import yaml
+    import logging
+    import kvlayer
+    from dblogger import DatabaseLogHandler, DBLoggerQuery
+
+    config = yaml.load(open("/myapp/config.yaml"))
+    client = kvlayer.client(config)
+    namespace = "myapp"
+
+    logger = logging.getLogger('mymodule')
+    logger.setLevel(logging.DEBUG)
+    dbhandler = DatabaseLogHandler(client, namespace)
+    logger.addHandler(dbhandler)
+
+    logger.warn("this is a demo msg")
 
 
 
