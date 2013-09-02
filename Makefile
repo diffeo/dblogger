@@ -6,7 +6,6 @@ install:
 	python setup.py install
 
 test: clean
-	python setup.py install_test > /dev/null
 	cd src && py.test -n 3 --runslow --runperf
 
 build_eggs: build
