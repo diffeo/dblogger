@@ -90,4 +90,12 @@ TODO
 
 - test rpm packge in a RPM platform.
 - search from command line.
+- questions:
+    - namespace: Namespace is realdy in the configuration file, why do we
+      need to provide namespace as argument in some functions?
+      I don'have experience with Cassandra an Accumulo, but namepace is like
+      DB in other DB engines? So namespace could be mapped to a db in MySQL,
+      MongoDB, etc and to a namespace in Cassandra and others?
 
+      Final question is, does it makes sense to have namespace as function
+      argument or is enough with the config file?
