@@ -50,31 +50,44 @@ This is a small app in Python, an example of how to use dblogger.
 Command Line
 ------------
 
-.... Diego, please invent appropriate command line interfaces and
-scripts for this.  For exmample, something like for a first version:
+   python -m dblogger.search -c myconfig.yaml appname namespace loglevel filter 
 
-
-   python -m dblogger.search -c myconfig.yaml  appname  namespace   loglevel  filterword  | less
-
+:filter: could be a regex to be applied to the log message or a field=regex pair,
+specifying the log record field and the regex to be applied to that field.
 
 
 Testing
 =======
 
-.... Diego, please invent a test application for exercising kvlayer
-and make it both a test that we can run via `make test` and also an
-illustration of how to use this.  The test should use subprocess to
-call the CLI
-
-If you put the tests into src/tests/dblogger/.... then pytest will run
-them
-
+   make test
 
 Building
 ========
 
-The Makefile contains targets for ... Diego, please take a look at the
-Makefile and let's discuss.  Our autobuild system will run whatever is
-in `make test`
+To build the module:
 
+    make
+
+To create an egg package:
+
+    make build_egg
+
+To create RPM packages:
+
+    make build_rpm
+
+If you want to publish the package:
+
+    make register
+
+and to clean everything:
+
+    make clean
+
+
+TODO
+====
+
+- test rpm packge in a RPM platform.
+- search from command line.
 
