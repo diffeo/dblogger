@@ -8,6 +8,7 @@ clean:
 	rm -rf build dist
 
 install: 
+	python setup.py install_test
 	python setup.py install
 
 test: clean
