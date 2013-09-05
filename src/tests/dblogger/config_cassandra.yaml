@@ -1,6 +1,6 @@
 
 namespace: test
-storage_addresses: ['localhost:9160']
+storage_addresses: ['test-cassandra-1.diffeo.com:9160']
 storage_type: cassandra
 
 username: root
