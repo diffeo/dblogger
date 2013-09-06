@@ -7,20 +7,22 @@ Copyright 2013 Diffeo, Inc.
 import time
 import logging
 import json
+import re
 
 from time_uuid import TimeUUID
 
 
 class DBLoggerQuery(object):
-    def __init__(self, storage_client, table_name="log"):
+    def __init__(self, storage_client, namespace, table_name="log"):
         self.storage = storage_client
+        self.namespace = namespace
         self.table_name = table_name
+        storage_client.setup_namespace(namespace, { table_name : 1 })
 
-
-    def filter(self, time_start=None, time_end=None, filter_str={}):
+    def filter(self, start=None, end=None, filter_str=None, tail=False):
         """Get log record from the database.
         
-        time_start and time_end must be timestamp as returned by time.time().
+        start and end must be timestamp as returned by time.time().
 
         filter_str() -- An dict of filters that will match agaist log record
         fields. Not Implemented yet.
@@ -29,13 +31,19 @@ class DBLoggerQuery(object):
 
         key_start = ''
         key_end = ''
-        if time_start:
-            uuid_start = TimeUUID.with_timestamp(time_start)
+        if start:
+            uuid_start = TimeUUID.with_timestamp(start)
             key_start = (uuid_start,)
-        if time_end:
-            uuid_end = TimeUUID.with_timestamp(time_end)
+        if end:
+            uuid_end = TimeUUID.with_timestamp(end)
             key_end = (uuid_end,)
 
+        if filter_str:
+            filter_re = re.compile(filter_str)
+
         for key, value in self.storage.get(self.table_name, (key_start, key_end)):
-            yield key, json.loads(value)
+            record = json.loads(value)
+            if filter_str and not filter_re.match(record["message"]):
+                continue
+            yield key, record
 

@@ -23,7 +23,7 @@ def test_cassandra():
 
     logger.warn("test")
 
-    query = DBLoggerQuery(client)
+    query = DBLoggerQuery(client, namespace)
     record = query.filter().next()
     assert record[1]["message"] == "test"
 
