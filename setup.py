@@ -117,5 +117,6 @@ setup(
     ],
     install_requires=[
         'kvlayer',
+        'time_uuid'
     ],
 )
