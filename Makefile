@@ -21,6 +21,9 @@ build_packages: build
 	python setup.py bdist_rpm
 
 register: build
-	python setup.py bdist_egg sdist upload -r internal
+	pip install --upgrade pip
+	pip install --upgrade setuptools
+	pip install wheel
+	python setup.py bdist_egg bdist_wheel sdist upload -r internal
 
 
