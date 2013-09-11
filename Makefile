@@ -12,7 +12,7 @@ install:
 	python setup.py install
 
 test: clean
-	cd src && py.test -n 3 --runslow --runperf
+	cd src && py.test -n 1 --runslow --runperf
 
 build_egg: build
 	python setup.py bdist_egg
