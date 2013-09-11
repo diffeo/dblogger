@@ -117,5 +117,6 @@ setup(
     ],
     install_requires=[
         'kvlayer',
+        'python-dateutil',
     ],
 )

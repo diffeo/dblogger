@@ -1,6 +1,7 @@
 
 import random
 import struct
+import time
 
 from uuid import UUID
 
@@ -18,3 +19,6 @@ def gen_uuid(timestamp=None):
 def random_slice(items):
     start = random.randint(0, len(items))
     end = random.randint(0, len(items))
+
+def datetime_to_time(datetime):
+    return time.mktime(datetime.timetuple())
