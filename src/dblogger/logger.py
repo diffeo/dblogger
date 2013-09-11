@@ -7,8 +7,10 @@ Copyright 2013 Diffeo, Inc.
 import time
 import logging
 import json
+import random
+import struct
 
-from time_uuid import TimeUUID
+from uuid import UUID
 
 
 class DatabaseLogHandler(logging.Handler):
@@ -63,8 +65,13 @@ class DatabaseLogHandler(logging.Handler):
         else:
             record.exc_text = ''
 
-        uuid = TimeUUID.with_timestamp(record.created)
+        timestamp = time.time()
+        # 128 bit fake-uuid is 64 bits time, 64 bits random number.
+        # High order bits first to keep ordering.
+        bytes = struct.pack('>qLL', long(timestamp * 1024), 
+                    random.getrandbits(32), random.getrandbits(32))
+        new_uuid = UUID(bytes=bytes)
         dbrec = self.serialize(record)
-        self.storage.put(self.table_name, ((uuid,), dbrec))
+        self.storage.put(self.table_name, ((new_uuid,), dbrec))
 
 
