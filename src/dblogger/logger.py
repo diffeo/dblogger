@@ -12,6 +12,8 @@ import struct
 
 from uuid import UUID
 
+from dblogger.utils import gen_uuid
+
 
 class DatabaseLogHandler(logging.Handler):
     '''
@@ -65,13 +67,7 @@ class DatabaseLogHandler(logging.Handler):
         else:
             record.exc_text = ''
 
-        timestamp = time.time()
-        # 128 bit fake-uuid is 64 bits time, 64 bits random number.
-        # High order bits first to keep ordering.
-        bytes = struct.pack('>qLL', long(timestamp * 1024), 
-                    random.getrandbits(32), random.getrandbits(32))
-        new_uuid = UUID(bytes=bytes)
+        new_uuid = gen_uuid(record.created)
         dbrec = self.serialize(record)
         self.storage.put(self.table_name, ((new_uuid,), dbrec))
-
 
