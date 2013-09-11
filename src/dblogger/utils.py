@@ -15,3 +15,6 @@ def gen_uuid(timestamp=None):
 
     return UUID(bytes=bytes)
 
+def random_slice(items):
+    start = random.randint(0, len(items))
+    end = random.randint(0, len(items))

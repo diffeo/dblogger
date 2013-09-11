@@ -9,7 +9,7 @@ import logging
 import json
 import re
 
-from time_uuid import TimeUUID
+from dblogger.utils import gen_uuid
 
 
 class DBLoggerQuery(object):
@@ -44,9 +44,9 @@ class DBLoggerQuery(object):
 
         uuid_start = uuid_end = None
         if start:
-            uuid_start = TimeUUID.with_timestamp(start)
+            uuid_start = gen_uuid(start)
         if end:
-            uuid_end = TimeUUID.with_timestamp(end)
+            uuid_end = gen_uuid(end)
         key_range = self.build_key_range(uuid_start, uuid_end)
 
         if filter_str:
