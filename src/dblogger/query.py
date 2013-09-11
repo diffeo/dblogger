@@ -17,7 +17,20 @@ class DBLoggerQuery(object):
         self.storage = storage_client
         self.namespace = namespace
         self.table_name = table_name
+        self.last_uuid = None
         storage_client.setup_namespace(namespace, { table_name : 1 })
+
+    def build_key_range(self, uuid_start=None, uuid_end=None):
+        key_start = key_end = ''
+
+        if uuid_start:
+            key_start = (uuid_start,)
+            key_end = ('',)
+        if uuid_end:
+            key_end = (uuid_end,)
+
+        return (key_start, key_end)
+
 
     def filter(self, start=None, end=None, filter_str=None, tail=False):
         """Get log record from the database.
@@ -29,21 +42,29 @@ class DBLoggerQuery(object):
 
         """
 
-        key_start = ''
-        key_end = ''
+        uuid_start = uuid_end = None
         if start:
             uuid_start = TimeUUID.with_timestamp(start)
-            key_start = (uuid_start,)
         if end:
             uuid_end = TimeUUID.with_timestamp(end)
-            key_end = (uuid_end,)
+        key_range = self.build_key_range(uuid_start, uuid_end)
 
         if filter_str:
             filter_re = re.compile(filter_str)
 
-        for key, value in self.storage.get(self.table_name, (key_start, key_end)):
-            record = json.loads(value)
-            if filter_str and not filter_re.match(record["message"]):
-                continue
-            yield key, record
+        while True:
+            for uuid, value in self.storage.get(self.table_name, key_range):
+                if uuid[0] == self.last_uuid:
+                    break
+                self.last_uuid = uuid[0]
+                record = json.loads(value)
+                if filter_str and not filter_re.match(record["message"]):
+                    continue
+                yield uuid, record
+
+            if not tail:
+                break
+
+            time.sleep(1)
+            key_range = self.build_key_range(uuid_start=self.last_uuid)
 

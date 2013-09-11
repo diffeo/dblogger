@@ -8,6 +8,7 @@ clean:
 	rm -rf build dist
 
 install: 
+	python setup.py install_test
 	python setup.py install
 
 test: clean
@@ -20,6 +21,9 @@ build_packages: build
 	python setup.py bdist_rpm
 
 register: build
-	python setup.py register sdist upload -r pypi
+	pip install --upgrade pip
+	pip install --upgrade setuptools
+	pip install wheel
+	python setup.py bdist_egg bdist_wheel sdist upload -r internal
 
 
