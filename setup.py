@@ -11,7 +11,7 @@ from distutils.core import Command
 from setuptools import setup, find_packages
 
 from version import get_git_version
-VERSION = get_git_version()
+VERSION, SOURCE_LABEL = get_git_version()
 PROJECT = 'dblogger'
 URL = 'tbd'
 AUTHOR = 'Diffeo, Inc.'
