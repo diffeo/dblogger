@@ -40,7 +40,7 @@ class DatabaseLogHandler(logging.Handler):
         self.storage = storage_client
         self.namespace = namespace
         self.table_name = table_name
-        storage_client.setup_namespace(namespace, { table_name : 1 })
+        storage_client.setup_namespace({ table_name : 1 })
 
     def formatDBTime(self, record):
         record.humantime = time.strftime('%Y-%m-%dT%H:%M:%S-%Z', time.localtime(record.created))
@@ -70,4 +70,3 @@ class DatabaseLogHandler(logging.Handler):
         new_uuid = gen_uuid(record.created)
         dbrec = self.serialize(record)
         self.storage.put(self.table_name, ((new_uuid,), dbrec))
-

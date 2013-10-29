@@ -3,7 +3,6 @@ import os
 import yaml
 import time
 import logging
-import json
 import random
 import math
 
@@ -12,6 +11,7 @@ import pytest
 import kvlayer
 
 from dblogger import DatabaseLogHandler, DBLoggerQuery
+from make_namespace_string import make_namespace_string
 
 config_path = os.path.join(os.path.dirname(__file__))
 
@@ -20,10 +20,12 @@ def client(request):
     config = yaml.load(open(os.path.join(config_path, request.param)))
     print config
     client = kvlayer.client(config)
+    config["namespace"] = make_namespace_string()
+    config["app_name"] = make_namespace_string()
     client.namespace = config["namespace"]
 
     def cleanup():
-        client.delete_namespace(client.namespace)
+        client.delete_namespace()
     request.addfinalizer(cleanup)
 
     return client
@@ -45,7 +47,7 @@ def test_basic(client):
 
 def test_ordering(client):
     dbhandler = DatabaseLogHandler(client, client.namespace)
-    
+
     for i in xrange(10):
         xdict = dict(created=time.time() + (2 ** i), msg="test %d" % i)
         record = logging.makeLogRecord(xdict)
@@ -59,7 +61,7 @@ def test_ordering(client):
 
 def test_queries(client):
     dbhandler = DatabaseLogHandler(client, client.namespace)
-    
+
     created_list = []
     for i in xrange(2, 10):
         created = time.time() + (2 ** i)
@@ -85,4 +87,3 @@ def test_queries(client):
     filter_str = 'test %d' % choice
     for record in query.filter(filter_str=filter_str):
         assert record[1]["message"] == "test %d" % choice
-

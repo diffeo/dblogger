@@ -18,7 +18,7 @@ class DBLoggerQuery(object):
         self.namespace = namespace
         self.table_name = table_name
         self.last_uuid = None
-        storage_client.setup_namespace(namespace, { table_name : 1 })
+        storage_client.setup_namespace({ table_name : 1 })
 
     def build_key_range(self, uuid_start=None, uuid_end=None):
         key_start = key_end = ''
@@ -34,7 +34,7 @@ class DBLoggerQuery(object):
 
     def filter(self, start=None, end=None, filter_str=None, tail=False):
         """Get log record from the database.
-        
+
         start and end must be timestamp as returned by time.time().
 
         filter_str() -- An dict of filters that will match agaist log record
@@ -67,4 +67,3 @@ class DBLoggerQuery(object):
 
             time.sleep(1)
             key_range = self.build_key_range(uuid_start=self.last_uuid)
-
