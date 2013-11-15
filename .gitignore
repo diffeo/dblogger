@@ -1,4 +1,5 @@
-*.pyc
+*.py[co]
+*~
 *.swp
 *__pycache__*
 build/
