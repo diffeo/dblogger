@@ -13,12 +13,11 @@ from dblogger.utils import gen_uuid
 
 
 class DBLoggerQuery(object):
-    def __init__(self, storage_client, namespace, table_name="log"):
+    def __init__(self, storage_client, table_name="log"):
         self.storage = storage_client
-        self.namespace = namespace
         self.table_name = table_name
         self.last_uuid = None
-        storage_client.setup_namespace(namespace, { table_name : 1 })
+        storage_client.setup_namespace({ table_name : 1 })
 
     def build_key_range(self, uuid_start=None, uuid_end=None):
         key_start = key_end = ''

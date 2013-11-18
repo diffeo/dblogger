@@ -11,12 +11,13 @@ from distutils.core import Command
 from setuptools import setup, find_packages
 
 from version import get_git_version
-VERSION = get_git_version()
+VERSION, SOURCE_LABEL = get_git_version()
 PROJECT = 'dblogger'
-URL = 'tbd'
+URL = 'https://github.com/diffeo/dblogger'
 AUTHOR = 'Diffeo, Inc.'
 AUTHOR_EMAIL = 'support@diffeo.com'
 DESC = 'DB-backed python logging.Handler subclass that uses kvlayer, and provides command-line tools.'
+LICENSE = 'MIT/X11 license http://opensource.org/licenses/MIT'
 
 
 def read_file(file_name):
@@ -33,6 +34,13 @@ def recursive_glob(treeroot, pattern):
         goodfiles = fnmatch.filter(files, pattern)
         results.extend(os.path.join(base, f) for f in goodfiles)
     return results
+
+
+def _myinstall(pkgspec):
+    setup(
+        script_args = ['-q', 'easy_install', '-v', pkgspec],
+        script_name = 'easy_install'
+    )
 
 
 class InstallTestDependencies(Command):
@@ -78,19 +86,27 @@ class PyTest(Command):
 
     def run(self):
         if self.distribution.install_requires:
-            self.distribution.fetch_build_eggs(
-                self.distribution.install_requires)
+            for ir in self.distribution.install_requires:
+                _myinstall(ir)
         if self.distribution.tests_require:
-            self.distribution.fetch_build_eggs(
-                self.distribution.tests_require)
+            for ir in self.distribution.tests_require:
+                _myinstall(ir)
 
-        errno = subprocess.call([sys.executable, 'runtests.py'])
-        raise SystemExit(errno)
+        # reload sys.path for any new libraries installed
+        import site
+        site.main()
+        print sys.path
+        # use pytest to run tests
+        pytest = __import__('pytest')
+        if pytest.main(['-n', '8', '-s', 'src', '--runperf', '--runslow']):
+            sys.exit(1)
 
 setup(
     name=PROJECT,
     version=VERSION,
+    source_label=SOURCE_LABEL,
     description=DESC,
+    license=LICENSE,
     long_description=read_file('README.rst'),
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,

@@ -35,12 +35,11 @@ class DatabaseLogHandler(logging.Handler):
     '%(exc_text)s',
     '%(thread)s'
     '''
-    def __init__(self, storage_client, namespace, table_name="log"):
+    def __init__(self, storage_client, table_name="log"):
         logging.Handler.__init__(self)
         self.storage = storage_client
-        self.namespace = namespace
         self.table_name = table_name
-        storage_client.setup_namespace(namespace, { table_name : 1 })
+        storage_client.setup_namespace({ table_name : 1 })
 
     def formatDBTime(self, record):
         record.humantime = time.strftime('%Y-%m-%dT%H:%M:%S-%Z', time.localtime(record.created))
