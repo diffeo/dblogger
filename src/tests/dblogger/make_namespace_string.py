@@ -16,7 +16,8 @@ def make_namespace_string(test_name='test'):
     use.
     '''
     return '_'.join([
-            test_name[:25], 
+            't_',
+            test_name[5:25],
             getpass.getuser().replace('-', '_')[:5],
             str(os.getpid()),
             hashlib.md5(socket.gethostname()).hexdigest()[:4],

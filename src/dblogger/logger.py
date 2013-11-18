@@ -69,4 +69,3 @@ class DatabaseLogHandler(logging.Handler):
         new_uuid = gen_uuid(record.created)
         dbrec = self.serialize(record)
         self.storage.put(self.table_name, ((new_uuid,), dbrec))
-

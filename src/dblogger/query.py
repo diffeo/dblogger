@@ -33,7 +33,7 @@ class DBLoggerQuery(object):
 
     def filter(self, start=None, end=None, filter_str=None, tail=False):
         """Get log record from the database.
-        
+
         start and end must be timestamp as returned by time.time().
 
         filter_str() -- An dict of filters that will match agaist log record
@@ -66,4 +66,3 @@ class DBLoggerQuery(object):
 
             time.sleep(1)
             key_range = self.build_key_range(uuid_start=self.last_uuid)
-
