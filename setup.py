@@ -133,6 +133,12 @@ setup(
     ],
     install_requires=[
         'kvlayer',
+        'streamcorpus',
         'python-dateutil',
     ],
+    entry_points={
+        'console_scripts': [
+            'dblogger = dblogger.query:main',
+        ]
+    },
 )
