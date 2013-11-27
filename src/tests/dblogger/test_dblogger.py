@@ -10,6 +10,7 @@ import subprocess
 import pytest
 
 import kvlayer
+
 from make_namespace_string import make_namespace_string
 
 from dblogger import DatabaseLogHandler, DBLoggerQuery
@@ -64,7 +65,7 @@ def test_preserve_existing_tables(client):
     val = 'data'
     client.put('existing_table_1', (key, val))
     
-    assert list(client.get('existing_table_1', (key, key)))[0][1] == val
+    assert list(client.get('existing_table_1', key))[0][1] == val
 
 def test_ordering(client):
     dbhandler = DatabaseLogHandler(client)
@@ -155,10 +156,12 @@ def test_queries_cli(client):
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
     )
+    child.wait()
+
     out = child.stdout.read()
     err = child.stderr.read()
 
-    assert not err
+    assert child.returncode == 0
     assert out
 
 def test_complete_zulu_timestamp():
@@ -182,8 +185,10 @@ def test_queries_cli2(client):
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
     )
+    child.wait()
+
     out = child.stdout.read()
     err = child.stderr.read()
 
-    assert not err
+    assert child.returncode == 0
     assert out

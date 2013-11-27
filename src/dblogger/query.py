@@ -54,10 +54,16 @@ class DBLoggerQuery(object):
             filter_re = re.compile(filter_str)
 
         while True:
-            for uuid, value in self.storage.get(self.table_name, key_range):
+            for uuid, value in self.storage.scan(self.table_name, key_range):
+
+
+                ## what is the purpose of these three lines?
                 if uuid[0] == self.last_uuid:
                     break
                 self.last_uuid = uuid[0]
+                ##  ^^^^^ why? ^^^^^^^^
+
+
                 record = json.loads(value)
                 if filter_str and not filter_re.match(record["message"]):
                     continue
@@ -85,6 +91,13 @@ def complete_zulu_timestamp(partial_zulu_timestamp):
 
 
 def main():
+    kvlayer_logger = logging.getLogger('kvlayer')
+    ch = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s pid=%(process)d %(filename)s:%(lineno)d %(levelname)s: %(message)s')
+    ch.setLevel('DEBUG')
+    ch.setFormatter(formatter)
+    kvlayer_logger.addHandler(ch)
+
     import argparse
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument('app_name',  help='name of application')
