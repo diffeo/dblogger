@@ -134,11 +134,11 @@ def test_queries(client):
 def test_queries2(client):
     dbhandler = DatabaseLogHandler(client)
 
-    created_list = []
-    for i in xrange(2, 10):
-        created = time.time() + (2 ** i)
-        created_list.append(created)
-        xdict = dict(created=created, msg="test %d" % created)
+    now = time.time()
+    created_list = [now + 2 ** i for i in xrange(2,10)]
+    messages = ['test {0}'.format(c) for c in created_list]
+    for (created,msg) in zip(created_list, messages):
+        xdict = dict(created=created, msg=msg)
         record = logging.makeLogRecord(xdict)
         dbhandler.emit(record)
 
@@ -146,20 +146,18 @@ def test_queries2(client):
 
     i = random.randint(0, len(created_list)-2)
     queries = created_list[i:]  ## no end
+    expected = messages[i:]
 
     begin = math.floor(queries[0])
     end = None  ## no end
-    i = 0
-    response = list(query.filter(begin=begin, end=end))
-    assert len(response) == len(created_list)
-    for record in response:
-        assert record[1]["message"] == "test %d" % created_list[i], response
-        i += 1
+    response = query.filter(begin=begin, end=end)
+    responses = [record[1]['message'] for record in response]
+    assert responses == expected
 
-    choice = random.choice(created_list)
-    filter_str = 'test %d' % choice
-    for record in query.filter(filter_str=filter_str):
-        assert record[1]["message"] == "test %d" % choice
+    (choice,expected) = random.choice(zip(created_list, messages))
+    response = query.filter(filter_str=expected)
+    responses = [record[1]['message'] for record in response]
+    assert responses == [expected]
 
 def test_queries_cli(client):
     dbhandler = DatabaseLogHandler(client)
