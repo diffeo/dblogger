@@ -42,15 +42,33 @@ def test_basic(client):
     logger.setLevel(logging.DEBUG)
     dbhandler = DatabaseLogHandler(client)
     logger.addHandler(dbhandler)
+    try:
+        for i in xrange(10):
+            logger.warn("test %d" % i)
 
-    for i in xrange(10):
-        logger.warn("test %d" % i)
+        query = DBLoggerQuery(client)
+        i = 0
+        for record in query.filter():
+            assert record[1]["message"] == "test %d" % i
+            i += 1
+    finally:
+        logger.removeHandler(dbhandler)
 
-    query = DBLoggerQuery(client)
-    i = 0
-    for record in query.filter():
-        assert record[1]["message"] == "test %d" % i
-        i += 1
+def test_configuration(client):
+    """create the logger from the configuration, not the client object"""
+    logger = logging.getLogger('test_logger')
+    logger.setLevel(logging.DEBUG)
+    dbhandler = DatabaseLogHandler(storage_config=client._config)
+    logger.addHandler(dbhandler)
+    try:
+        messages = ['test {0}'.format(i) for i in xrange(10)]
+        for m in messages: logger.warn(m)
+
+        query = DBLoggerQuery(client)
+        responses = [record[1]['message'] for record in query.filter()]
+        assert responses == messages
+    finally:
+        logger.removeHandler(dbhandler)
 
 def test_preserve_existing_tables(client):
     logger = logging.getLogger('test_logger')
@@ -58,14 +76,17 @@ def test_preserve_existing_tables(client):
     dbhandler = DatabaseLogHandler(client)
     logger.addHandler(dbhandler)
 
-    for i in xrange(10):
-        logger.warn("test %d" % i)
+    try:
+        for i in xrange(10):
+            logger.warn("test %d" % i)
 
-    key = (uuid.uuid4(), uuid.uuid4())
-    val = 'data'
-    client.put('existing_table_1', (key, val))
+        key = (uuid.uuid4(), uuid.uuid4())
+        val = 'data'
+        client.put('existing_table_1', (key, val))
     
-    assert list(client.get('existing_table_1', key))[0][1] == val
+        assert list(client.get('existing_table_1', key))[0][1] == val
+    finally:
+        logger.removeHandler(dbhandler)
 
 def test_ordering(client):
     dbhandler = DatabaseLogHandler(client)

@@ -1,9 +1,14 @@
 '''
 python logging handler that stores log messages in a database
 
-Copyright 2013 Diffeo, Inc.
+This software is released under an MIT/X11 open source license.
+
+Copyright 2013-2014 Diffeo, Inc.
 '''
 
+from __future__ import absolute_import
+
+from importlib import import_module
 import time
 import logging
 import json
@@ -13,7 +18,7 @@ import struct
 from uuid import UUID
 
 from dblogger.utils import gen_uuid
-
+import kvlayer
 
 class DatabaseLogHandler(logging.Handler):
     '''
@@ -35,8 +40,24 @@ class DatabaseLogHandler(logging.Handler):
     '%(exc_text)s',
     '%(thread)s'
     '''
-    def __init__(self, storage_client, table_name="log"):
-        logging.Handler.__init__(self)
+    def __init__(self, storage_client=None, table_name="log",
+                 storage_config=None):
+        """Create a new database log handler.
+
+        You must either pass in ``storage_client``, an actual kvlayer
+        client object, or ``storage_config``, a dictionary which will
+        be passed to ``kvlayer.client()``.  Log messages
+        will be stored in the table ``table_name``.
+
+        """
+        super(DatabaseLogHandler, self).__init__()
+
+        if storage_client is None:
+            if storage_config is None:
+                raise RuntimeError('must pass either storage_client or '
+                                   'storage_config')
+            storage_client = kvlayer.client(storage_config)
+            
         self.storage = storage_client
         self.table_name = table_name
         storage_client.setup_namespace({ table_name : 1 })
