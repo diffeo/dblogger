@@ -18,6 +18,25 @@ def test_default_config(capsys):
     assert err[34:46] == 'test_configu'
     assert err[52:] == 'CRITICAL test\n'
 
+def test_change_log_level_only(capsys):
+    config = """
+    logging:
+        version: 1
+        root:
+            level: DEBUG
+    """
+    config = yaml.load(StringIO(config))
+    configure_logging(config)
+    logger = logging.getLogger('dblogger.test_global')
+    logger.critical('test')
+    logger.debug('test 2')
+    (out,err) = capsys.readouterr()
+    print out
+    assert err[34:46] == 'test_configu'
+    assert err[52:66] == 'CRITICAL test\n'
+    assert err[100:112] == 'test_configu'
+    assert err[118:] == 'DEBUG    test 2\n'
+
 def test_toplevel_config(capsys):
     config = """
     logging:
