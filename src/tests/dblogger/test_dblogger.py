@@ -11,19 +11,15 @@ import pytest
 
 import kvlayer
 
-from make_namespace_string import make_namespace_string
-
 from dblogger import DatabaseLogHandler, DBLoggerQuery
 from dblogger.query import complete_zulu_timestamp
-
-from make_namespace_string import make_namespace_string
 
 config_path = os.path.join(os.path.dirname(__file__))
 
 @pytest.fixture(scope='function', params=[ "config_cassandra.yaml" ])
-def client(request):
+def client(request, namespace_string):
     config = yaml.load(open(os.path.join(config_path, request.param)))
-    config['namespace'] = make_namespace_string()
+    config['namespace'] = namespace_string
     print config
     client = kvlayer.client(config)
 
@@ -171,7 +167,7 @@ def test_queries_cli(client):
         dbhandler.emit(record)
 
     child = subprocess.Popen(
-        ['dblogger', 'dblogger_tests', client._config['namespace']],
+        ['dblogger', 'dbltest', client._config['namespace']],
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
     )
@@ -198,7 +194,7 @@ def test_queries_cli2(client):
         dbhandler.emit(record)
 
     child = subprocess.Popen(
-        ['dblogger', 'dblogger_tests', client._config['namespace'],
+        ['dblogger', 'dbltest', client._config['namespace'],
          '--begin', '1998-01-03T08',
         ],
         stderr=subprocess.PIPE,
