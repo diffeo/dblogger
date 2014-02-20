@@ -6,7 +6,7 @@ import kvlayer
 import logging
 import multiprocessing
 
-from tests.dblogger.test_dblogger import client ## fixture that cleans up
+from dblogger.tests.test_dblogger import client ## fixture that cleans up
 
 from dblogger import DatabaseLogHandler, DBLoggerQuery
 

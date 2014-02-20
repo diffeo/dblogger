@@ -98,7 +98,7 @@ class PyTest(Command):
         print sys.path
         # use pytest to run tests
         pytest = __import__('pytest')
-        if pytest.main(['-n', '8', '-s', 'src', '--runperf', '--runslow']):
+        if pytest.main(['-n', '8', '-s', 'dblogger', '--runperf', '--runslow']):
             sys.exit(1)
 
 setup(
@@ -111,8 +111,7 @@ setup(
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
     url=URL,
-    packages=find_packages('src', exclude=('tests', 'tests.*')),
-    package_dir={'': 'src'},
+    packages=find_packages(),
     cmdclass={'test': PyTest,
               'install_test': InstallTestDependencies},
     # We can select proper classifiers later
