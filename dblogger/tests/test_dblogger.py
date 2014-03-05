@@ -10,18 +10,24 @@ import subprocess
 import pytest
 
 import kvlayer
+import yakonfig
 
 from dblogger import DatabaseLogHandler, DBLoggerQuery
 from dblogger.query import complete_zulu_timestamp
 
 config_path = os.path.join(os.path.dirname(__file__))
 
-@pytest.fixture(scope='function', params=[ "config_cassandra.yaml" ])
-def client(request, namespace_string):
-    config = yaml.load(open(os.path.join(config_path, request.param)))
-    config['namespace'] = namespace_string
+@pytest.fixture(scope='function')
+def client(request, namespace_string, redis_address):
+    config = dict(
+        namespace = namespace_string,
+        storage_type = 'redis',
+        app_name = 'dbltest',
+        storage_addresses = [redis_address],
+        )
     print config
-    client = kvlayer.client(config)
+    yakonfig.set_global_config(dict(kvlayer=config))
+    client = kvlayer.client()
 
     client.setup_namespace(
         dict(existing_table_1=2,

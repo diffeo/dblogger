@@ -12,7 +12,7 @@ import kvlayer
 import streamcorpus
 
 from dblogger.utils import gen_uuid
-
+import yakonfig
 
 class DBLoggerQuery(object):
     def __init__(self, storage_client, table_name="log"):
@@ -122,7 +122,8 @@ def main():
     if args.end:
         args.end   = streamcorpus.make_stream_time(complete_zulu_timestamp(args.end)).epoch_ticks
 
-    client = kvlayer.client(args.__dict__)
+    yakonfig.set_global_config(dict(kvlayer=args.__dict__))
+    client = kvlayer.client()
     query = DBLoggerQuery(client)
     count = 0
     try:

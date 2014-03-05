@@ -19,6 +19,7 @@ from uuid import UUID
 
 from dblogger.utils import gen_uuid
 import kvlayer
+import yakonfig
 
 class DatabaseLogHandler(logging.Handler):
     '''
@@ -56,7 +57,8 @@ class DatabaseLogHandler(logging.Handler):
             if storage_config is None:
                 raise RuntimeError('must pass either storage_client or '
                                    'storage_config')
-            storage_client = kvlayer.client(storage_config)
+            yakonfig.set_global_config(dict(kvlayer=storage_config))
+            storage_client = kvlayer.client()
             
         self.storage = storage_client
         self.table_name = table_name

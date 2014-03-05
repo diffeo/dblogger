@@ -6,6 +6,8 @@ import kvlayer
 import logging
 import multiprocessing
 
+import yakonfig
+
 from dblogger.tests.test_dblogger import client ## fixture that cleans up
 
 from dblogger import DatabaseLogHandler, DBLoggerQuery
@@ -19,7 +21,8 @@ logger = logging.getLogger()
 logger.addHandler(ch)
 
 def worker(config, num_records):
-    client = kvlayer.client(config)
+    yakonfig.set_global_config(dict(kvlayer=config))
+    client = kvlayer.client()
     dbhandler = DatabaseLogHandler(client)
     logger = logging.getLogger('foo')
     logger.addHandler(dbhandler)

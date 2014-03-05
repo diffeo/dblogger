@@ -129,6 +129,7 @@ setup(
         'pytest-incremental',
         'pytest-capturelog',
         'epydoc',
+        'pytest-diffeo',
     ],
     install_requires=[
         'kvlayer',
