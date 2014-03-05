@@ -104,7 +104,7 @@ def test_ordering(client):
         assert record[1]["message"] == "test %d" % i
         i += 1
 
-def test_queries(client):
+def test_queries_simple(client):
     dbhandler = DatabaseLogHandler(client)
 
     created_list = []
@@ -133,7 +133,7 @@ def test_queries(client):
     for record in query.filter(filter_str=filter_str):
         assert record[1]["message"] == "test %d" % choice
 
-def test_queries2(client):
+def test_queries_simple2(client):
     dbhandler = DatabaseLogHandler(client)
 
     now = time.time()
@@ -173,7 +173,7 @@ def test_queries_cli(client):
         dbhandler.emit(record)
 
     child = subprocess.Popen(
-        ['dblogger', 'dbltest', client._config['namespace']],
+        ['dblogger', 'dbltest', client._config['namespace'], '--storage-type', client._config['storage_type'], '--storage-address', client._config['storage_addresses'][0], ],
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
     )
@@ -200,7 +200,7 @@ def test_queries_cli2(client):
         dbhandler.emit(record)
 
     child = subprocess.Popen(
-        ['dblogger', 'dbltest', client._config['namespace'],
+        ['dblogger', 'dbltest', client._config['namespace'], '--storage-type', client._config['storage_type'], '--storage-address', client._config['storage_addresses'][0],
          '--begin', '1998-01-03T08',
         ],
         stderr=subprocess.PIPE,
@@ -211,5 +211,5 @@ def test_queries_cli2(client):
     out = child.stdout.read()
     err = child.stderr.read()
 
-    assert child.returncode == 0
+    assert child.returncode == 0, err
     assert out

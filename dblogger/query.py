@@ -22,11 +22,12 @@ class DBLoggerQuery(object):
         storage_client.setup_namespace({ table_name : 1 })
 
     def build_key_range(self, uuid_start=None, uuid_end=None):
-        key_start = key_end = ''
+        key_start = tuple()
+        key_end = tuple()
 
         if uuid_start:
             key_start = (uuid_start,)
-            key_end = ('',)
+
         if uuid_end:
             key_end = (uuid_end,)
 
@@ -54,20 +55,18 @@ class DBLoggerQuery(object):
             filter_re = re.compile(filter_str)
 
         while True:
-            for uuid, value in self.storage.scan(self.table_name, key_range):
-
+            for key, value in self.storage.scan(self.table_name, key_range):
 
                 ## what is the purpose of these three lines?
-                if uuid[0] == self.last_uuid:
+                if key[0] == self.last_uuid:
                     break
-                self.last_uuid = uuid[0]
+                self.last_uuid = key[0]
                 ##  ^^^^^ why? ^^^^^^^^
-
 
                 record = json.loads(value)
                 if filter_str and not filter_re.match(record["message"]):
                     continue
-                yield uuid, record
+                yield key, record
 
             if not tail:
                 break
@@ -108,14 +107,7 @@ def main():
     parser.add_argument(
         '--end', default=None, 
         help='YYYY-MM-DDTHH:MM:SS.MMMMMMZ in UTC can be truncated at any depth')
-    parser.add_argument('--storage-address', action='append', default=[], 
-                        dest='storage_addresses',
-                        help='add a storage address to the config')
-    parser.add_argument('--storage-type', default='cassandra')
-    args = parser.parse_args()
-
-    if not args.storage_addresses:
-        args.storage_addresses = ['test-cassandra-1.diffeo.com:9160']
+    args = yakonfig.parse_args(parser, [kvlayer])
 
     if args.begin:
         args.begin = streamcorpus.make_stream_time(complete_zulu_timestamp(args.begin)).epoch_ticks
