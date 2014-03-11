@@ -1,16 +1,21 @@
-'''
-Formatters
+'''Formatters for :mod:`logging`.
 
-Copyright 2013 Diffeo, Inc.
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2013-2014 Diffeo, Inc.
+
 '''
 
 import logging
 
-
 class FixedWidthFormatter(logging.Formatter):
-    '''
-    Provides fixed-width logging display, see:
-    http://stackoverflow.com/questions/6692248/python-logging-string-formatting
+    '''Formats log messages in fixed columns.
+
+    This adds format string properties
+    ``%(fixed_width_filename_lineno)s`` containing the file name and
+    line number in a 17-character-wide field, and
+    ``%(fixed_width_levelname`` containing the log level padded out to
+    an 8-character-wide field.
+
     '''
     filename_width = 17
     levelname_width = 8

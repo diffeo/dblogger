@@ -1,28 +1,23 @@
 """Globally configure logging from a dictionary.
 
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2014 Diffeo Inc.
+
 Purpose
 =======
 
-Call ``dblogger.configure_logging()`` with a configuration dictionary,
-such as the global configuration given to yakonfig.  This will perform
-the logging configuration described there, and set reasonable defaults
-if there is no configuration.
+Call :func:`dblogger.configure_logging`` with a configuration
+dictionary, such as the global configuration given to :mod:`yakonfig`.
+This will perform the logging configuration described there, and set
+reasonable defaults if there is no configuration.
 
-If the dictionary passed to ``configure_logging()`` contains a key
+If the dictionary passed to :func:`configure_logging` contains a key
 ``logging``, that key's value is used as the logging configuration;
 otherwise if the dictionary looks like logging configuration itself,
-it is used directly; otherwise only default settings are used.  For
-the actual configuration schema, see the Python documentation at
-http://docs.python.org/2.7/library/logging.config.html#configuration-dictionary-schema
+it is used directly; otherwise only default settings are used.
 
-
-Implementation Details
-======================
-
-
-This software is released under an MIT/X11 open source license.
-
-Copyright 2014 Diffeo Inc.
+Module Contents
+===============
 
 """
 
@@ -36,13 +31,16 @@ def configure_logging(config):
     Set up logging as described in ``config``.  ``config`` should be a
     top-level configuration dictionary with a key ``logging``, and the
     value of that key is used as a configuration dictionary for
-    ``logging.config``.  If there is no ``logging`` key but there is a
-    ``version: 1`` key/value, ``config`` is used directly as the
+    :mod:`logging.config`.  If there is no ``logging`` key but there
+    is a ``version: 1`` key/value, ``config`` is used directly as the
     configuration.  Otherwise a minimal default configuration is used.
 
     If the configuration does not define any handlers, then a default
     console log handler will be created and bound to the root logger.
-    This will use a formatter named ``fixed``, defining it if necessary.
+    This will use a formatter named ``fixed``, defining it if
+    necessary.
+
+    :param dict config: :mod:`logging.config` setup dictionary
 
     """
     # find the actual logging config dictionary

@@ -1,17 +1,38 @@
-'''
-python query handler.
+'''Query tool to retrieve :class:`dblogger.DatabaseLogHandler` results.
 
-Copyright 2013 Diffeo, Inc.
-'''
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2013-2014 Diffeo, Inc.
 
-import time
-import logging
+This provides a :program:`dblogger` command-line tool.  It retrieves
+messages stored in a database using
+:class:`dblogger.DatabaseLogHandler`.  Call :program:`dblogger` with
+two command-line arguments, the application name and namespace for
+:mod:`kvlayer`.
+
+.. program:: dblogger
+
+.. option:: --begin <time>
+
+Only show messages at or after `time`.  Time should be an ISO date
+string of the form ``YYYY-MM-DDTHH:MM:SS.MMMMMMZ``, or any
+left-truncated prefix thereof.
+
+.. option:: --end <time>
+
+Only show messages at or before `time`.
+
+'''
+from __future__ import absolute_import
+import argparse
 import json
+import logging
 import re
+import time
+
+import dblogger
+from dblogger.utils import gen_uuid
 import kvlayer
 import streamcorpus
-
-from dblogger.utils import gen_uuid
 import yakonfig
 
 class DBLoggerQuery(object):
@@ -90,14 +111,6 @@ def complete_zulu_timestamp(partial_zulu_timestamp):
 
 
 def main():
-    kvlayer_logger = logging.getLogger('kvlayer')
-    ch = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s pid=%(process)d %(filename)s:%(lineno)d %(levelname)s: %(message)s')
-    ch.setLevel('DEBUG')
-    ch.setFormatter(formatter)
-    kvlayer_logger.addHandler(ch)
-
-    import argparse
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument('app_name',  help='name of application')
     parser.add_argument('namespace', help='namespace to query for logs')
@@ -108,13 +121,13 @@ def main():
         '--end', default=None, 
         help='YYYY-MM-DDTHH:MM:SS.MMMMMMZ in UTC can be truncated at any depth')
     args = yakonfig.parse_args(parser, [kvlayer])
+    dblogger.configure_logging(yakonfig.get_global_config())
 
     if args.begin:
         args.begin = streamcorpus.make_stream_time(complete_zulu_timestamp(args.begin)).epoch_ticks
     if args.end:
         args.end   = streamcorpus.make_stream_time(complete_zulu_timestamp(args.end)).epoch_ticks
 
-    yakonfig.set_global_config(dict(kvlayer=args.__dict__))
     client = kvlayer.client()
     query = DBLoggerQuery(client)
     count = 0

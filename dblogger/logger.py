@@ -1,11 +1,9 @@
+''':mod:`logging` handler that stores log messages in a database.
+
+.. This software is released under an MIT/X11 open source license.
+   Copyright 2013-2014 Diffeo, Inc.
+
 '''
-python logging handler that stores log messages in a database
-
-This software is released under an MIT/X11 open source license.
-
-Copyright 2013-2014 Diffeo, Inc.
-'''
-
 from __future__ import absolute_import
 
 from importlib import import_module
@@ -22,24 +20,41 @@ import kvlayer
 import yakonfig
 
 class DatabaseLogHandler(logging.Handler):
-    '''
-    This was adapted from reading log_test14.py in the original python
-    logging package that later was added to the standard library:
-    http://www.red-dove.com/python_logging.html#download
+    '''Log handler that stores log messages in a database.
 
-    This handles log messages, which have these attrs:
-    %(dbtime)s,
-    %(relativeCreated)d,
-    '%(name)s',
-    %(levelno)d,
-    '%(levelname)s',
-    '%(message)s',
-    '%(filename)s',
-    '%(pathname)s',
-    %(lineno)d,
-    %(msecs)d,
-    '%(exc_text)s',
-    '%(thread)s'
+    This uses :mod:`kvlayer` to store the actual log messages.
+    When the log handler is created, the caller needs to pass
+    in either the :mod:`kvlayer` configuration or the actual
+    :class:`kvlayer.AbstractStorage` object.  The constructor
+    also accepts a virtual table name, defaulting to ``log``.
+
+    If a global YAML file is used to configure the application, then
+    YAML reference syntax can be used to share this handler's
+    configuration with the global kvlayer configuration.
+
+    .. code-block:: yaml
+
+        kvlayer: &kvlayer
+          storage_type: redis
+          storage_addresses: [ 'redis.example.com:6379' ]
+        logging:
+          handlers:
+            db:
+              class: dblogger.DatabaseLogHandler
+              storage_config: *kvlayer
+
+    Log messages are stored in a table with a single UUID key, where
+    the high-order bits of the UUID are in order by time.  The actual
+    table values are serialized JSON representations of the log
+    records.
+
+    This log handlers adds a format string property ``%(humantime)s``
+    with a time in a fixed format, and ``%(exc_text)s`` with the
+    formatted traceback from an exception.  These properties are also
+    included in the JSON stored in the database..
+
+    .. automethod:: __init__
+
     '''
     def __init__(self, storage_client=None, table_name="log",
                  storage_config=None):
@@ -50,6 +65,11 @@ class DatabaseLogHandler(logging.Handler):
         be passed to ``kvlayer.client()``.  Log messages
         will be stored in the table ``table_name``.
 
+        :param storage_client: existing storage client
+        :type storage_client: :class:`kvlayer.AbstractStorage`
+        :param str table_name: virtual table name
+        :param dict storage_config: configuration for new storage client
+
         """
         super(DatabaseLogHandler, self).__init__()
 
@@ -57,8 +77,9 @@ class DatabaseLogHandler(logging.Handler):
             if storage_config is None:
                 raise RuntimeError('must pass either storage_client or '
                                    'storage_config')
-            yakonfig.set_global_config(dict(kvlayer=storage_config))
-            storage_client = kvlayer.client()
+            with yakonfig.defaulted_config(
+                    [kvlayer], config=dict(kvlayer=storage_config)):
+                storage_client = kvlayer.client()
             
         self.storage = storage_client
         self.table_name = table_name
