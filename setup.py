@@ -132,7 +132,7 @@ setup(
         'pytest-diffeo',
     ],
     install_requires=[
-        'kvlayer',
+        'kvlayer >= 0.4.0',
         'streamcorpus',
         'python-dateutil',
     ],

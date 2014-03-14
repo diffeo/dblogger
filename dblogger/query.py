@@ -131,11 +131,10 @@ def main():
     client = kvlayer.client()
     query = DBLoggerQuery(client)
     count = 0
-    try:
-        for record in query.filter(args.begin, args.end):
-            print record
-            count += 1
-    except kvlayer.MissingID:
+    for record in query.filter(args.begin, args.end):
+        print record
+        count += 1
+    if count == 0:
         print 'no log records found'
     else:
         print 'returned %d log records' % count
