@@ -1,4 +1,4 @@
-
+from __future__ import absolute_import
 import os
 import yaml
 import time
@@ -8,6 +8,7 @@ import math
 import uuid
 import subprocess
 import pytest
+import sys
 
 import kvlayer
 import yakonfig
@@ -173,7 +174,12 @@ def test_queries_cli(client):
         dbhandler.emit(record)
 
     child = subprocess.Popen(
-        ['dblogger', 'dbltest', client._config['namespace'], '--storage-type', client._config['storage_type'], '--storage-address', client._config['storage_addresses'][0], ],
+        [sys.executable, '-m', 'dblogger.query',
+         '--app-name', 'dbltest',
+         '--namespace', client._config['namespace'],
+         '--storage-type', client._config['storage_type'],
+         '--storage-address', client._config['storage_addresses'][0],
+        ],
         stderr=subprocess.PIPE,
         stdout=subprocess.PIPE,
     )
@@ -200,7 +206,11 @@ def test_queries_cli2(client):
         dbhandler.emit(record)
 
     child = subprocess.Popen(
-        ['dblogger', 'dbltest', client._config['namespace'], '--storage-type', client._config['storage_type'], '--storage-address', client._config['storage_addresses'][0],
+        [sys.executable, '-m', 'dblogger.query',
+         '--app-name', 'dbltest',
+         '--namespace', client._config['namespace'],
+         '--storage-type', client._config['storage_type'],
+         '--storage-address', client._config['storage_addresses'][0],
          '--begin', '1998-01-03T08',
         ],
         stderr=subprocess.PIPE,

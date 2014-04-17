@@ -149,8 +149,13 @@ def configure_logging(config):
         if 'fixed' not in config['formatters']:
             config['formatters']['fixed'] = {
                 '()': 'dblogger.FixedWidthFormatter',
+                'format': ('%(asctime)-23s pid=%(process)-5d '
+                           '%(fixed_width_filename_lineno)s '
+                           '%(fixed_width_levelname)s %(message)s'),
             }
         config['handlers']['console'] = {
+            'class': 'logging.StreamHandler',
+            'formatter': 'fixed',
         }
         config.setdefault('root', {})
         config['root']['handlers'] = ['console']
