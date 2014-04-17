@@ -5,9 +5,13 @@
 
 This provides a :program:`dblogger` command-line tool.  It retrieves
 messages stored in a database using
-:class:`dblogger.DatabaseLogHandler`.  Call :program:`dblogger` with
-two command-line arguments, the application name and namespace for
-:mod:`kvlayer`.
+:class:`dblogger.DatabaseLogHandler`.
+
+This supports the standard :option:`--config <yakonfig --config>`,
+:option:`--dump-config <yakonfig --dump-config>`,
+:option:`--verbose <dblogger --verbose>`,
+:option:`--quiet <dblogger --quiet>`, and
+:option:`--debug <dblogger --debug>` options.
 
 .. program:: dblogger
 
@@ -111,17 +115,15 @@ def complete_zulu_timestamp(partial_zulu_timestamp):
 
 
 def main():
-    parser = argparse.ArgumentParser(__doc__)
-    parser.add_argument('app_name',  help='name of application')
-    parser.add_argument('namespace', help='namespace to query for logs')
+    parser = argparse.ArgumentParser(
+        description='retrieve log messages from kvlayer')
     parser.add_argument(
         '--begin', default=None, 
         help='YYYY-MM-DDTHH:MM:SS.MMMMMMZ in UTC can be truncated at any depth')
     parser.add_argument(
         '--end', default=None, 
         help='YYYY-MM-DDTHH:MM:SS.MMMMMMZ in UTC can be truncated at any depth')
-    args = yakonfig.parse_args(parser, [kvlayer])
-    dblogger.configure_logging(yakonfig.get_global_config())
+    args = yakonfig.parse_args(parser, [yakonfig, kvlayer, dblogger])
 
     if args.begin:
         args.begin = streamcorpus.make_stream_time(complete_zulu_timestamp(args.begin)).epoch_ticks

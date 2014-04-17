@@ -132,6 +132,7 @@ setup(
         'pytest-diffeo',
     ],
     install_requires=[
+        'yakonfig >= 0.4.1',
         'kvlayer >= 0.4.0',
         'streamcorpus',
         'python-dateutil',

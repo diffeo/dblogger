@@ -11,10 +11,37 @@ support utilities.
 
 Applications that use this support a ``logging`` block in their
 configuration files.  This may have any valid logging setup supported
-by the :mod:`logging.config` module.  If no handlers are defined in
-the configuration, the initial setup will create a formatter named
-``fixed`` and a handler named ``console`` and bind these to the root
-logger.
+by the :mod:`logging.config` module.  The default configuration
+includes a formatter named ``fixed`` and a handler named ``console``
+bound to the root logger, and a further console handler named
+``debug`` not bound anywhere.
+
+Command-line options
+====================
+
+.. program:: dblogger
+
+All programs that use :mod:`dblogger` support shared command-line
+options.  If not changed in the configuration, the defaults write
+:data:`logging.INFO` level output to the console, and
+:option:`--verbose` enables all debug-level logging.
+
+.. option:: --verbose, -v
+
+Include more output, increasing the ``console`` log handler's level
+one step.  This can be included multiple times.  If the program is
+more verbose than quiet and the ``console`` log handler is not
+attached to the root logger, adds it.
+
+.. option:: --quiet, -q
+
+Include less output, decreasing the ``console`` log handler's level
+one step.  This can be included multiple times.
+
+.. option:: --debug <logger>
+
+Write debug-level output for `logger` to the ``debug`` log handler.
+This can be included multiple times.
 
 Recipes
 =======
@@ -29,40 +56,30 @@ top-level block in the YAML file:
       root:
         level: DEBUG
 
-To enable info-level logging to the console everywhere, but also
-debug-level logging for a specific package:
+To enable debug-level logging for a specific package in the
+configuration file:
 
 .. code-block:: yaml
 
     logging:
-      root:
-        level: INFO
       loggers:
         some.other.package:
           level: DEBUG
 
-To have info-level logging to the console and also debug-level logging
-to a file, you need to recreate the default logger setup.
+To write debug logs globally to a file:
 
 .. code-block:: yaml
 
     logging:
-      formatters:
-        fixed:
-          '()': dblogger.FixedWidthFormatter
-          format: '%(asctime)-23s pid=%(process)-5d %(fixed_width_filename_lineno)s %(fixed_width_levelname)s %(message)s'
-      handlers:
-        console:
-          class: logging.StreamHandler
-          formatter: fixed
-          level: INFO
         file:
           class: logging.FileHandler
           filename: /tmp/dblogger.log
           formatter: fixed
       root:
-        level: DEBUG
         handlers: [console, file]
+
+For further details about what is allowed, see the Python library
+:mod:`logging.config` documentation.
 
 Logging tools
 =============
@@ -76,15 +93,23 @@ Logging tools
 Initial logging setup
 =====================
 
+Include :mod:`dblogger` in your :func:`yakonfig.parse_args` call
+to do all of the initial setup.  When control returns to your
+application, logging will be fully set up.
+
+Older programs that do not yet support this interface use:
+
 .. autofunction:: configure_logging
 
-Database log query tool
-=======================
+:program:`dblogger` query tool
+==============================
 
 .. automodule:: dblogger.query
 
 '''
 from __future__ import absolute_import
+from dblogger.configure import config_name, default_config, add_arguments, \
+    runtime_keys, normalize_config
 from dblogger.configure import configure_logging
 from dblogger.format import FixedWidthFormatter
 from dblogger.logger import DatabaseLogHandler
