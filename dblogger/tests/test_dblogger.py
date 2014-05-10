@@ -51,8 +51,8 @@ def test_basic(client):
 
         query = DBLoggerQuery(client)
         i = 0
-        for record in query.filter():
-            assert record[1]["message"] == "test %d" % i
+        for key, record in query.filter():
+            assert record.message == "test %d" % i
             i += 1
     finally:
         logger.removeHandler(dbhandler)
@@ -68,7 +68,7 @@ def test_configuration(client):
         for m in messages: logger.warn(m)
 
         query = DBLoggerQuery(client)
-        responses = [record[1]['message'] for record in query.filter()]
+        responses = [record.message for key, record in query.filter()]
         assert responses == messages
     finally:
         logger.removeHandler(dbhandler)
@@ -101,8 +101,8 @@ def test_ordering(client):
 
     query = DBLoggerQuery(client)
     i = 0
-    for record in query.filter():
-        assert record[1]["message"] == "test %d" % i
+    for key, record in query.filter():
+        assert record.message == "test %d" % i
         i += 1
 
 def test_queries_simple(client):
@@ -125,14 +125,14 @@ def test_queries_simple(client):
     begin = math.floor(slice[0])
     end = math.ceil(slice[-1])
     i = 0
-    for record in query.filter(begin=begin, end=end):
-        assert record[1]["message"] == "test %d" % slice[i]
+    for key, record in query.filter(begin=begin, end=end):
+        assert record.message == "test %d" % slice[i]
         i += 1
 
     choice = random.choice(created_list)
     filter_str = 'test %d' % choice
-    for record in query.filter(filter_str=filter_str):
-        assert record[1]["message"] == "test %d" % choice
+    for key, record in query.filter(filter_str=filter_str):
+        assert record.message == "test %d" % choice
 
 def test_queries_simple2(client):
     dbhandler = DatabaseLogHandler(client)
@@ -154,12 +154,12 @@ def test_queries_simple2(client):
     begin = math.floor(queries[0])
     end = None  ## no end
     response = query.filter(begin=begin, end=end)
-    responses = [record[1]['message'] for record in response]
+    responses = [record.message for key, record in response]
     assert responses == expected
 
     (choice,expected) = random.choice(zip(created_list, messages))
     response = query.filter(filter_str=expected)
-    responses = [record[1]['message'] for record in response]
+    responses = [record.message for key, record in response]
     assert responses == [expected]
 
 def test_queries_cli(client):

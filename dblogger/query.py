@@ -28,12 +28,13 @@ Only show messages at or before `time`.
 '''
 from __future__ import absolute_import
 import argparse
-import json
 import logging
 import re
 import time
 
 import dblogger
+from dblogger.format import FixedWidthFormatter
+from dblogger.logger import DatabaseLogHandler
 from dblogger.utils import gen_uuid
 import kvlayer
 import streamcorpus
@@ -80,7 +81,7 @@ class DBLoggerQuery(object):
             filter_re = re.compile(filter_str)
 
         while True:
-            for key, value in self.storage.scan(self.table_name, key_range):
+            for key, rec_json in self.storage.scan(self.table_name, key_range):
 
                 ## what is the purpose of these three lines?
                 if key[0] == self.last_uuid:
@@ -88,8 +89,8 @@ class DBLoggerQuery(object):
                 self.last_uuid = key[0]
                 ##  ^^^^^ why? ^^^^^^^^
 
-                record = json.loads(value)
-                if filter_str and not filter_re.match(record["message"]):
+                record = DatabaseLogHandler.deserialize(rec_json)
+                if filter_str and not filter_re.match(record.message):
                     continue
                 yield key, record
 
@@ -132,9 +133,10 @@ def main():
 
     client = kvlayer.client()
     query = DBLoggerQuery(client)
+    formatter = FixedWidthFormatter()
     count = 0
-    for record in query.filter(args.begin, args.end):
-        print record
+    for key, record in query.filter(args.begin, args.end):
+        print formatter.format(record)
         count += 1
     if count == 0:
         print 'no log records found'

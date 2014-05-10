@@ -50,7 +50,10 @@ This is a small app in Python, an example of how to use dblogger.
 Command Line
 ------------
 
-   python -m dblogger.search -c myconfig.yaml appname namespace loglevel filter 
+After installing the python package, this command line entry point
+will be available:
+
+   dblogger -c myconfig.yaml appname namespace loglevel filter 
 
 :filter: could be a regex to be applied to the log message or a field=regex pair,
 specifying the log record field and the regex to be applied to that field.

@@ -88,14 +88,14 @@ class DatabaseLogHandler(logging.Handler):
     def formatDBTime(self, record):
         record.humantime = time.strftime('%Y-%m-%dT%H:%M:%S-%Z', time.localtime(record.created))
 
-    def serialize(self, record):
-        rec = {}
-        for k, v in record.__dict__.items():
-            if k in [ 'args', 'msg' ]:
-                continue
-            rec[str(k)] = str(v)
+    @classmethod
+    def serialize(cls, record):
+        return json.dumps(record.__dict__)
 
-        return json.dumps(rec)
+    @classmethod
+    def deserialize(cls, rec_json):
+        xdict = json.loads(rec_json)
+        return logging.makeLogRecord(xdict)
 
     def emit(self, record):
         '''
