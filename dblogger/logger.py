@@ -90,7 +90,10 @@ class DatabaseLogHandler(logging.Handler):
 
     @classmethod
     def serialize(cls, record):
-        return json.dumps(record.__dict__)
+        xdict = dict()
+        for k, v in record.__dict__.iteritems():
+            xdict[k] = str(v)            
+        return json.dumps(xdict)
 
     @classmethod
     def deserialize(cls, rec_json):
