@@ -55,6 +55,7 @@ default_config = {
     },
     'root': {
         'handlers': ['console'],
+        'level': 'NOTSET',
     },
     'loggers': {
     },
