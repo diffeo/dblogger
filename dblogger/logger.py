@@ -92,7 +92,9 @@ class DatabaseLogHandler(logging.Handler):
     def serialize(cls, record):
         xdict = dict()
         for k, v in record.__dict__.iteritems():
-            xdict[k] = str(v)            
+            if isinstance(v, tuple):
+                v = list(v)
+            xdict[k] = v
         return json.dumps(xdict)
 
     @classmethod

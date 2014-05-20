@@ -72,9 +72,9 @@ def test_queries_throughput(client):
                     expected_count, elapsed, float(expected_count) / elapsed)
 
     count = 0
-    for record in query.filter():
+    for key, record in query.filter():
         logger.critical( record )
-        assert record[1]["message"]
+        assert record.message
         count += 1
     
     assert count == expected_count
