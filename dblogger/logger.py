@@ -12,6 +12,7 @@ import logging
 import json
 import random
 import struct
+import sys
 
 from uuid import UUID
 
@@ -94,8 +95,16 @@ class DatabaseLogHandler(logging.Handler):
         for k, v in record.__dict__.iteritems():
             if isinstance(v, tuple):
                 v = list(v)
+            if isinstance(v, list):
+                for idx, item in enumerate(v):
+                    if isinstance(item, (type, object)):
+                        v[idx] = str(item)
             xdict[k] = v
-        return json.dumps(xdict)
+        try:
+            return json.dumps(xdict)
+        except:
+            sys.exit('failed to serialize: %r' % xdict)
+            
 
     @classmethod
     def deserialize(cls, rec_json):

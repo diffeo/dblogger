@@ -57,6 +57,23 @@ def test_basic(client):
     finally:
         logger.removeHandler(dbhandler)
 
+def test_log_exception_info(client):
+    logger = logging.getLogger('test_logger')
+    logger.setLevel(logging.DEBUG)
+    dbhandler = DatabaseLogHandler(client)
+    logger.addHandler(dbhandler)
+    try:
+        try:
+            raise Exception('hello!')
+        except:
+            logger.warn("test with exception", exc_info=True)
+
+        query = DBLoggerQuery(client)
+        for key, record in query.filter():
+            assert record.message
+    finally:
+        logger.removeHandler(dbhandler)
+
 def test_configuration(client):
     """create the logger from the configuration, not the client object"""
     logger = logging.getLogger('test_logger')
