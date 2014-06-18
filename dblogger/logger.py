@@ -98,12 +98,11 @@ class DatabaseLogHandler(logging.Handler):
     def deserialize(cls, rec_pickle):
         try:
             xdict = pickle.loads(rec_pickle)
-            return logging.makeLogRecord(xdict)
 
         except Exception, exc:
-            rec = logging.LogRecord()
-            rec.msg = 'warning!!!! failed to unpickle: %r' % rec_pickle
-            return rec
+            xdict = {'msg': 'warning!!!! failed to unpickle: %r' % rec_pickle}
+
+        return logging.makeLogRecord(xdict)
 
 
     def emit(self, record):
