@@ -16,10 +16,13 @@ import struct
 import sys
 
 from uuid import UUID
+from tblib import pickling_support
+pickling_support.install()  ## register traceback smarts with pickle
 
 from dblogger.utils import gen_uuid
 import kvlayer
 import yakonfig
+
 
 class DatabaseLogHandler(logging.Handler):
     '''Log handler that stores log messages in a database.
@@ -92,7 +95,7 @@ class DatabaseLogHandler(logging.Handler):
 
     @classmethod
     def serialize(cls, record):
-        return pickle.dump(record)
+        return pickle.dumps(record.__dict__,  protocol=pickle.HIGHEST_PROTOCOL)
 
     @classmethod
     def deserialize(cls, rec_pickle):

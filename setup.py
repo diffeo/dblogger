@@ -132,6 +132,7 @@ setup(
         'pytest-diffeo',
     ],
     install_requires=[
+        'tblib',  ## to pickle tracebacks
         'yakonfig >= 0.4.1',
         'kvlayer >= 0.4.0',
         'streamcorpus',
