@@ -24,7 +24,6 @@ from dblogger.utils import gen_uuid
 import kvlayer
 import yakonfig
 
-logger = logging.getLogger(__name__)
 
 class DatabaseLogHandler(logging.Handler):
     '''Log handler that stores log messages in a database.
@@ -96,25 +95,16 @@ class DatabaseLogHandler(logging.Handler):
         record.humantime = time.strftime('%Y-%m-%dT%H:%M:%S-%Z', time.localtime(record.created))
 
     @classmethod
-    def serialize(cls, record):
-        try:
-            return pickle.dumps(record.__dict__,  protocol=pickle.HIGHEST_PROTOCOL)
-        except Exception, exc:
-            logger.critical('failed to dump log record, will shutdown')
-            logger.critical(traceback.format_exc(exc))
-            logger.critical('failed to pickle the __dict__ on: record=%r' % record)
-            logger.critical('failed to pickle: record.__dict__=%r' % record.__dict__)
-            logger.critical('logging failed so shutting down entire process')
-            sys.exit(exc)
-
-    @classmethod
     def deserialize(cls, rec_pickle):
         try:
             xdict = pickle.loads(rec_pickle)
+            return logging.makeLogRecord(xdict)
+
         except Exception, exc:
-            print rec_pickle
-            sys.exit(traceback.format_exc(exc))
-        return logging.makeLogRecord(xdict)
+            rec = logging.LogRecord()
+            rec.msg = 'warning!!!! failed to unpickle: %r' % rec_pickle
+            return rec
+
 
     def emit(self, record):
         '''
@@ -124,17 +114,18 @@ class DatabaseLogHandler(logging.Handler):
         self.format(record)
         self.formatDBTime(record)
 
+        failure = []
         try:
             ## cannot serialize arbitrary args, because they might not be
             ## picklable, so do the string now
             record.msg = record.msg % record.args
             record.args = None
         except Exception, exc:
-            logger.critical('failed to run string formatting on provided args')
-            logger.critical('record.msg = %r' % record.msg)
-            logger.critical('record.args = %r' % record.args)
-            logger.criticla('logging failed so shutting down entire process')
-            sys.exit(exc)
+            failure.append('failed to run string formatting on provided args')
+            failure.append('record.msg = %r' % record.msg)
+            failure.append('record.args = %r' % record.args)
+            failure.append(traceback.format_exc(exc))
+            failure.append('logging failed so shutting down entire process')
 
         if record.exc_info:
             record.exc_text = logging._defaultFormatter.formatException(record.exc_info)
@@ -142,5 +133,22 @@ class DatabaseLogHandler(logging.Handler):
             record.exc_text = ''
 
         new_uuid = gen_uuid(record.created)
-        dbrec = self.serialize(record)
+
+        try:
+            dbrec = pickle.dumps(record.__dict__,  protocol=pickle.HIGHEST_PROTOCOL)
+        except Exception, exc:
+            failure.append('failed to dump log record, will shutdown')
+            failure.append(traceback.format_exc(exc))
+            failure.append('failed to pickle the __dict__ on: record=%r' % record)
+            failure.append('failed to pickle: record.__dict__=%r' % record.__dict__)
+            failure.append('logging failed so shutting down entire process')
+
+        if failure:
+            dbrec = '\n'.join(failure)
+
+        ## send it to the DB... especially if it is a failure
         self.storage.put(self.table_name, ((new_uuid,), dbrec))
+
+        if failure:
+            ## shutdown the process when logging fails
+            sys.exit(dbrec)
