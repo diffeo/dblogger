@@ -14,6 +14,7 @@ import cPickle as pickle
 import random
 import struct
 import sys
+import traceback
 
 from uuid import UUID
 from tblib import pickling_support
@@ -99,7 +100,11 @@ class DatabaseLogHandler(logging.Handler):
 
     @classmethod
     def deserialize(cls, rec_pickle):
-        xdict = pickle.loads(rec_pickle)
+        try:
+            xdict = pickle.loads(rec_pickle)
+        except Exception, exc:
+            print rec_pickle
+            sys.exit(traceback.format_exc(exc))
         return logging.makeLogRecord(xdict)
 
     def emit(self, record):

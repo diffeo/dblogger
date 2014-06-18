@@ -81,7 +81,7 @@ class DBLoggerQuery(object):
             filter_re = re.compile(filter_str)
 
         while True:
-            for key, rec_json in self.storage.scan(self.table_name, key_range):
+            for key, rec_pickle in self.storage.scan(self.table_name, key_range):
 
                 ## what is the purpose of these three lines?
                 if key[0] == self.last_uuid:
@@ -89,7 +89,7 @@ class DBLoggerQuery(object):
                 self.last_uuid = key[0]
                 ##  ^^^^^ why? ^^^^^^^^
 
-                record = DatabaseLogHandler.deserialize(rec_json)
+                record = DatabaseLogHandler.deserialize(rec_pickle)
                 if filter_str and not filter_re.match(record.message):
                     continue
                 yield key, record
@@ -133,10 +133,19 @@ def main():
 
     client = kvlayer.client()
     query = DBLoggerQuery(client)
-    formatter = FixedWidthFormatter()
+
+    ## rather than specify the format string in a second place, we get
+    ## the configured StreamHandler and use its `format` method
+    logger = logging.getLogger()
+    ch = None
+    for handler in logger.handlers:
+        if isinstance(handler, logging.StreamHandler):
+            ch = handler
+    assert ch, 'must have a StreamHandler configured in order to use dblogger command-line'
+
     count = 0
     for key, record in query.filter(args.begin, args.end):
-        print formatter.format(record)
+        print ch.format(record)
         count += 1
     if count == 0:
         print 'no log records found'
