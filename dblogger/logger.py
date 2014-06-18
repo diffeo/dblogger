@@ -10,6 +10,7 @@ from importlib import import_module
 import time
 import logging
 import json
+import cPickle as pickle
 import random
 import struct
 import sys
@@ -91,24 +92,11 @@ class DatabaseLogHandler(logging.Handler):
 
     @classmethod
     def serialize(cls, record):
-        xdict = dict()
-        for k, v in record.__dict__.iteritems():
-            if isinstance(v, tuple):
-                v = list(v)
-            if isinstance(v, list):
-                for idx, item in enumerate(v):
-                    if isinstance(item, (type, object)):
-                        v[idx] = str(item)
-            xdict[k] = v
-        try:
-            return json.dumps(xdict)
-        except:
-            sys.exit('failed to serialize: %r' % xdict)
-            
+        return pickle.dump(record)
 
     @classmethod
-    def deserialize(cls, rec_json):
-        xdict = json.loads(rec_json)
+    def deserialize(cls, rec_pickle):
+        xdict = pickle.loads(rec_pickle)
         return logging.makeLogRecord(xdict)
 
     def emit(self, record):
