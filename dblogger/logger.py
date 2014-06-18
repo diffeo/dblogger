@@ -115,17 +115,18 @@ class DatabaseLogHandler(logging.Handler):
         self.formatDBTime(record)
 
         failure = []
-        try:
-            ## cannot serialize arbitrary args, because they might not be
-            ## picklable, so do the string now
-            record.msg = record.msg % record.args
-            record.args = None
-        except Exception, exc:
-            failure.append('failed to run string formatting on provided args')
-            failure.append('record.msg = %r' % record.msg)
-            failure.append('record.args = %r' % record.args)
-            failure.append(traceback.format_exc(exc))
-            failure.append('logging failed so shutting down entire process')
+        if record.args:
+            try:
+                ## cannot serialize arbitrary args, because they might not be
+                ## picklable, so do the string now
+                record.msg = record.msg % record.args
+                record.args = None
+            except Exception, exc:
+                failure.append('failed to run string formatting on provided args')
+                failure.append(traceback.format_exc(exc))
+                failure.append('record.msg = %r' % record.msg)
+                failure.append('record.args = %r' % (record.args,))
+                failure.append('logging failed so shutting down entire process')
 
         if record.exc_info:
             record.exc_text = logging._defaultFormatter.formatException(record.exc_info)
