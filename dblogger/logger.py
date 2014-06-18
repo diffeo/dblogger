@@ -24,6 +24,7 @@ from dblogger.utils import gen_uuid
 import kvlayer
 import yakonfig
 
+logger = logging.getLogger(__name__)
 
 class DatabaseLogHandler(logging.Handler):
     '''Log handler that stores log messages in a database.
@@ -96,7 +97,15 @@ class DatabaseLogHandler(logging.Handler):
 
     @classmethod
     def serialize(cls, record):
-        return pickle.dumps(record.__dict__,  protocol=pickle.HIGHEST_PROTOCOL)
+        try:
+            return pickle.dumps(record.__dict__,  protocol=pickle.HIGHEST_PROTOCOL)
+        except Exception, exc:
+            logger.critical('failed to dump log record, will shutdown')
+            logger.critical(traceback.format_exc(exc))
+            logger.critical('failed to pickle the __dict__ on: record=%r' % record)
+            logger.critical('failed to pickle: record.__dict__=%r' % record.__dict__)
+            logger.critical('logging failed so shutting down entire process')
+            sys.exit(exc)
 
     @classmethod
     def deserialize(cls, rec_pickle):
@@ -114,6 +123,18 @@ class DatabaseLogHandler(logging.Handler):
         '''
         self.format(record)
         self.formatDBTime(record)
+
+        try:
+            ## cannot serialize arbitrary args, because they might not be
+            ## picklable, so do the string now
+            record.msg = record.msg % record.args
+            record.args = None
+        except Exception, exc:
+            logger.critical('failed to run string formatting on provided args')
+            logger.critical('record.msg = %r' % record.msg)
+            logger.critical('record.args = %r' % record.args)
+            logger.criticla('logging failed so shutting down entire process')
+            sys.exit(exc)
 
         if record.exc_info:
             record.exc_text = logging._defaultFormatter.formatException(record.exc_info)
