@@ -30,6 +30,7 @@ from __future__ import absolute_import
 import argparse
 import logging
 import re
+import sys
 import time
 
 import dblogger
@@ -124,12 +125,44 @@ def main():
     parser.add_argument(
         '--end', default=None, 
         help='YYYY-MM-DDTHH:MM:SS.MMMMMMZ in UTC can be truncated at any depth')
+    parser.add_argument('--past', type=int, default=60, metavar='N',
+                        help='show the most recent N seconds of logs, default N=60. '
+                        'If negative, then scan from earliest moment *upto* '
+                        'N seconds ago.')
+    parser.add_argument('--clear', action='store_true', default=False,
+                        help='delete all messages in scan')
+    parser.add_argument('-y', '--yes', default=False, action='store_true',
+                        dest='assume_yes',
+                        help='assume "yes" and require no input for '
+                        'confirmation questions.')
     args = yakonfig.parse_args(parser, [yakonfig, kvlayer, dblogger])
 
     if args.begin:
-        args.begin = streamcorpus.make_stream_time(complete_zulu_timestamp(args.begin)).epoch_ticks
+        args.begin = streamcorpus.make_stream_time(
+            complete_zulu_timestamp(args.begin)).epoch_ticks
+    elif args.past > 0:
+        args.begin = time.time() - args.past
+    else:
+        args.begin = None
+
     if args.end:
-        args.end   = streamcorpus.make_stream_time(complete_zulu_timestamp(args.end)).epoch_ticks
+        args.end   = streamcorpus.make_stream_time(
+            complete_zulu_timestamp(args.end)).epoch_ticks
+    elif args.past < 0:
+        args.end = time.time() + args.past
+    else:
+        args.end = None
+
+    if args.clear:
+        if not args.assume_yes:
+            namespace = yakonfig.get_global_config('kvlayer')['namespace']
+            response = raw_input('Delete all logs between {!r} and {!r} in {!r}?  Enter namespace: '
+                                 .format(args.begin, args.end, namespace))
+            if response != namespace:
+                sys.stdout.write('not deleting anything\n')
+                return
+        sys.stdout.write('deleting logs between {!r} and {!r} in namespace {!r}\n'
+                          .format(args.begin, args.end, namespace))
 
     client = kvlayer.client()
     query = DBLoggerQuery(client)
@@ -146,6 +179,8 @@ def main():
     count = 0
     for key, record in query.filter(args.begin, args.end):
         print ch.format(record)
+        if args.clear:
+            client.delete(key)
         count += 1
     if count == 0:
         print 'no log records found'
