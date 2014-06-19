@@ -180,7 +180,7 @@ def main():
     for key, record in query.filter(args.begin, args.end):
         print ch.format(record)
         if args.clear:
-            client.delete(key)
+            client.delete(query.table_name, key)
         count += 1
     if count == 0:
         print 'no log records found'
