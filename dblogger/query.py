@@ -154,8 +154,8 @@ def main():
         args.end = None
 
     if args.clear:
+        namespace = yakonfig.get_global_config('kvlayer')['namespace']
         if not args.assume_yes:
-            namespace = yakonfig.get_global_config('kvlayer')['namespace']
             response = raw_input('Delete all logs between {!r} and {!r} in {!r}?  Enter namespace: '
                                  .format(args.begin, args.end, namespace))
             if response != namespace:
@@ -186,6 +186,8 @@ def main():
         print 'no log records found'
     else:
         print 'returned %d log records' % count
+        if args.clear:
+            print 'and deleted all of them.'
 
 if __name__ == '__main__':
     main()
