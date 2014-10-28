@@ -6,19 +6,14 @@
 '''
 from __future__ import absolute_import
 
-from importlib import import_module
 import time
 import logging
-import json
 import cPickle as pickle
-import random
-import struct
 import sys
 import traceback
 
-from uuid import UUID
 from tblib import pickling_support
-pickling_support.install()  ## register traceback smarts with pickle
+pickling_support.install()  # register traceback smarts with pickle
 
 from dblogger.utils import gen_uuid
 import kvlayer
@@ -86,24 +81,25 @@ class DatabaseLogHandler(logging.Handler):
             with yakonfig.defaulted_config(
                     [kvlayer], config=dict(kvlayer=storage_config)):
                 storage_client = kvlayer.client()
-            
+
         self.storage = storage_client
         self.table_name = table_name
-        storage_client.setup_namespace({ table_name : 1 })
+        storage_client.setup_namespace({table_name: 1})
+        self.sequence_number = 0
 
     def formatDBTime(self, record):
-        record.humantime = time.strftime('%Y-%m-%dT%H:%M:%S-%Z', time.localtime(record.created))
+        record.humantime = time.strftime('%Y-%m-%dT%H:%M:%S-%Z',
+                                         time.localtime(record.created))
 
     @classmethod
     def deserialize(cls, rec_pickle):
         try:
             xdict = pickle.loads(rec_pickle)
 
-        except Exception, exc:
+        except Exception:
             xdict = {'msg': 'warning!!!! failed to unpickle: %r' % rec_pickle}
 
         return logging.makeLogRecord(xdict)
-
 
     def emit(self, record):
         '''
@@ -116,39 +112,48 @@ class DatabaseLogHandler(logging.Handler):
         failure = []
         if record.args:
             try:
-                ## cannot serialize arbitrary args, because they might not be
-                ## picklable, so do the string now
+                # cannot serialize arbitrary args, because they might not be
+                # picklable, so do the string now
                 record.msg = record.msg % record.args
                 record.args = None
             except Exception, exc:
-                failure.append('failed to run string formatting on provided args')
+                failure.append('failed to run string formatting on '
+                               'provided args')
                 failure.append(traceback.format_exc(exc))
                 failure.append('record.msg = %r' % record.msg)
                 failure.append('record.args = %r' % (record.args,))
-                failure.append('logging failed so shutting down entire process')
+                failure.append('logging failed so shutting down entire '
+                               'process')
 
         if record.exc_info:
-            record.exc_text = logging._defaultFormatter.formatException(record.exc_info)
+            record.exc_text = logging._defaultFormatter.formatException(
+                record.exc_info)
         else:
             record.exc_text = ''
 
-        new_uuid = gen_uuid(record.created)
+        # NB: This is safe because emit() is called from handler() under
+        # self.lock
+        new_uuid = gen_uuid(record.created, self.sequence_number)
+        self.sequence_number += 1
 
         try:
-            dbrec = pickle.dumps(record.__dict__,  protocol=pickle.HIGHEST_PROTOCOL)
+            dbrec = pickle.dumps(record.__dict__,
+                                 protocol=pickle.HIGHEST_PROTOCOL)
         except Exception, exc:
             failure.append('failed to dump log record, will shutdown')
             failure.append(traceback.format_exc(exc))
-            failure.append('failed to pickle the __dict__ on: record=%r' % record)
-            failure.append('failed to pickle: record.__dict__=%r' % record.__dict__)
+            failure.append('failed to pickle the __dict__ on: record=%r'
+                           % record)
+            failure.append('failed to pickle: record.__dict__=%r'
+                           % record.__dict__)
             failure.append('logging failed so shutting down entire process')
 
         if failure:
             dbrec = '\n'.join(failure)
 
-        ## send it to the DB... especially if it is a failure
+        # send it to the DB... especially if it is a failure
         self.storage.put(self.table_name, ((new_uuid,), dbrec))
 
         if failure:
-            ## shutdown the process when logging fails
+            # shutdown the process when logging fails
             sys.exit(dbrec)
