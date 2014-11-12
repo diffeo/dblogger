@@ -3,8 +3,7 @@
 .. This software is released under an MIT/X11 open source license.
    Copyright 2013-2014 Diffeo, Inc.
 
-This provides a :program:`dblogger` command-line tool.  It retrieves
-messages stored in a database using
+:program:`dblogger` retrieves messages stored in a database using
 :class:`dblogger.DatabaseLogHandler`.
 
 This supports the standard :option:`--config <yakonfig --config>`,
@@ -17,13 +16,13 @@ This supports the standard :option:`--config <yakonfig --config>`,
 
 .. option:: --begin <time>
 
-Only show messages at or after `time`.  Time should be an ISO date
-string of the form ``YYYY-MM-DDTHH:MM:SS.MMMMMMZ``, or any
-left-truncated prefix thereof.
+    Only show messages at or after `time`.  Time should be an ISO date
+    string of the form ``YYYY-MM-DDTHH:MM:SS.MMMMMMZ``, or any
+    left-truncated prefix thereof.
 
 .. option:: --end <time>
 
-Only show messages at or before `time`.
+    Only show messages at or before `time`.
 
 '''
 from __future__ import absolute_import

@@ -3,108 +3,136 @@
 .. This software is released under an MIT/X11 open source license.
    Copyright 2013-2014 Diffeo, Inc.
 
-This package provides basic support tools for the standard Python
-:mod:`logging` package.  In particular, it exposes the
-:mod:`logging.config` setup language through configuration layers
-such as :mod:`yakonfig`, and it includes some basic database
-support utilities.
+.. only:: pyapi or all
 
-Applications that use this support a ``logging`` block in their
-configuration files.  This may have any valid logging setup supported
-by the :mod:`logging.config` module.  The default configuration
-includes a formatter named ``fixed`` and a handler named ``console``
-bound to the root logger, and a further console handler named
-``debug`` not bound anywhere.
+    This package provides basic support tools for the standard Python
+    :mod:`logging` package.  In particular, it exposes the
+    :mod:`logging.config` setup language through configuration layers
+    such as :mod:`yakonfig`, and it includes some basic database
+    support utilities.
 
-Command-line options
-====================
+    Applications that use this support a ``logging`` block in their
+    configuration files.  This may have any valid logging setup
+    supported by the :mod:`logging.config` module.  The default
+    configuration includes a formatter named ``fixed`` and a handler
+    named ``console`` bound to the root logger, and a further console
+    handler named ``debug`` not bound anywhere.
 
-.. program:: dblogger
+.. only:: all
 
-All programs that use :mod:`dblogger` support shared command-line
-options.  If not changed in the configuration, the defaults write
-:data:`logging.INFO` level output to the console, and
-:option:`--verbose` enables all debug-level logging.
+    Command-line options
+    ====================
 
-.. option:: --verbose, -v
+    All programs that use :mod:`dblogger` support shared command-line
+    options.  If not changed in the configuration, the defaults write
+    :data:`logging.INFO` level output to the console, and
+    :option:`--verbose` enables all debug-level logging.
 
-Include more output, increasing the ``console`` log handler's level
-one step.  This can be included multiple times.  If the program is
-more verbose than quiet and the ``console`` log handler is not
-attached to the root logger, adds it.
+.. only:: cliref or all
 
-.. option:: --quiet, -q
+    .. program:: dblogger
 
-Include less output, decreasing the ``console`` log handler's level
-one step.  This can be included multiple times.
+    .. option:: --verbose, -v
 
-.. option:: --debug <logger>
+        Include more output, increasing the ``console`` log handler's
+        level one step.  This can be included multiple times.  If the
+        program is more verbose than quiet and the ``console`` log
+        handler is not attached to the root logger, adds it.
 
-Write debug-level output for `logger` to the ``debug`` log handler.
-This can be included multiple times.
+    .. option:: --quiet, -q
 
-Recipes
-=======
+        Include less output, decreasing the ``console`` log handler's
+        level one step.  This can be included multiple times.
 
-To enable debug-level logging everywhere in an application using this
-package alongside a YAML-based configuration system, include a
-top-level block in the YAML file:
+    .. option:: --debug <logger>
 
-.. code-block:: yaml
+        Write debug-level output for `logger` to the ``debug`` log
+        handler.  This can be included multiple times.
 
-    logging:
-      root:
-        level: DEBUG
+    Recipes
+    =======
 
-To enable debug-level logging for a specific package in the
-configuration file:
+    To enable debug-level logging everywhere, include a top-level
+    block in the YAML configuration file:
 
-.. code-block:: yaml
+    .. code-block:: yaml
 
-    logging:
-      loggers:
-        some.other.package:
-          level: DEBUG
+        logging:
+          root:
+            level: DEBUG
 
-To write debug logs globally to a file:
+    To enable debug-level logging for a specific package in the
+    configuration file:
 
-.. code-block:: yaml
+    .. code-block:: yaml
 
-    logging:
-        file:
-          class: logging.FileHandler
-          filename: /tmp/dblogger.log
-          formatter: fixed
-      root:
-        handlers: [console, file]
+        logging:
+          loggers:
+            some.other.package:
+              level: DEBUG
 
-For further details about what is allowed, see the Python library
-:mod:`logging.config` documentation.
+    To write debug logs globally to a file:
 
-Logging tools
-=============
+    .. code-block:: yaml
 
-.. autoclass:: DatabaseLogHandler
-   :show-inheritance:
+        logging:
+          handlers:
+            file:
+              class: logging.FileHandler
+              filename: /tmp/dblogger.log
+              formatter: fixed
+          root:
+            handlers: [console, file]
 
-.. autoclass:: FixedWidthFormatter
-   :show-inheritance:
+    To write logs to a database and suppress normal console output:
 
-Initial logging setup
-=====================
+    .. code-block:: yaml
 
-Include :mod:`dblogger` in your :func:`yakonfig.parse_args` call
-to do all of the initial setup.  When control returns to your
-application, logging will be fully set up.
+        logging:
+          handlers:
+            dblogger:
+              class: dblogger.DatabaseLogHandler
+              storage_config: *kvlayer
+          root:
+            handlers: [dblogger]
+        kvlayer: &kvlayer
+          storage_type: redis
+          storage_addresses: ['redis.example.com:6379']
 
-Older programs that do not yet support this interface use:
+    In this last case, :mod:`dblogger <dblogger.query>` can print out
+    the saved log messages.
 
-.. autofunction:: configure_logging
+    For further details about what is allowed, see the Python library
+    :mod:`logging.config` documentation.
 
-:program:`dblogger` query tool
-==============================
+.. only:: pyapi or all
 
-.. automodule:: dblogger.query
+    Logging tools
+    =============
+
+    .. autoclass:: DatabaseLogHandler
+       :show-inheritance:
+
+    .. autoclass:: FixedWidthFormatter
+       :show-inheritance:
+
+    Initial logging setup
+    =====================
+
+    Include :mod:`dblogger` in your :func:`yakonfig.parse_args` call
+    to do all of the initial setup.  When control returns to your
+    application, logging will be fully set up.
+
+    Older programs that do not yet support this interface use:
+
+    .. autofunction:: configure_logging
+
+.. only:: all
+
+    :program:`dblogger` query tool
+    ==============================
+
+    .. automodule:: dblogger.query
 
 '''
 from __future__ import absolute_import
