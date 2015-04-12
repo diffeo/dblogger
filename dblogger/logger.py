@@ -12,8 +12,13 @@ import cPickle as pickle
 import sys
 import traceback
 
-from tblib import pickling_support
-pickling_support.install()  # register traceback smarts with pickle
+try:
+    from tblib import pickling_support
+    pickling_support.install()  # register traceback smarts with pickle
+except ImportError, exc:
+    ## tblib does not work in python2.6...
+    ## log something?
+    pass
 
 from dblogger.utils import gen_uuid
 import kvlayer
