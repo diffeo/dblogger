@@ -23,6 +23,12 @@ Module Contents
 
 from __future__ import absolute_import
 
+try:
+    from logging.config import dictConfig
+except ImportError:
+    # for python 2.6
+    from logutils.dictconfig import dictConfig
+
 import logging.config
 
 # yakonfig configuration metadata
@@ -112,7 +118,7 @@ def normalize_config(config):
         config[option] = default_config[option]
 
     # Fire everything off
-    logging.config.dictConfig(config)
+    dictConfig(config)
 
 def configure_logging(config):
     """One-time global logging configuration.

@@ -132,6 +132,7 @@ setup(
         'pytest-diffeo',
     ],
     install_requires=[
+        'logutils', ## backport of dictConfig to python 2.6: http://pythonhosted.org//logutils/
         'tblib',  ## to pickle tracebacks
         'yakonfig >= 0.4.1',
         'kvlayer >= 0.4.0',

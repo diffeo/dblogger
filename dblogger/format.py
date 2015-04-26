@@ -6,6 +6,7 @@
 '''
 
 import logging
+import sys
 
 class FixedWidthFormatter(logging.Formatter):
     '''Formats log messages in fixed columns.
@@ -30,6 +31,9 @@ class FixedWidthFormatter(logging.Formatter):
         levelname = record.levelname
         levelname_padding = ' ' * (self.levelname_width - len(levelname))
         record.fixed_width_levelname = levelname + levelname_padding
-        return super(FixedWidthFormatter, self).format(record)
 
+        if sys.hexversion > 0x02070000:
+            return super(FixedWidthFormatter, self).format(record)
+        else:
+            return logging.Formatter.format(self, record)
 
